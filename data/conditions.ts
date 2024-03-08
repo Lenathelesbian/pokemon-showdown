@@ -158,14 +158,360 @@ export const Conditions: {[k: string]: ConditionData} = {
 			this.damage(this.clampIntRange(pokemon.baseMaxhp / 16, 1) * this.effectState.stage);
 		},
 	},
+	glo: {
+		name: 'glo',
+		effectType: 'Status',
+		onStart(target, source, sourceEffect) {
+			if (sourceEffect && sourceEffect.effectType === 'Ability') {
+				this.add('-status', target, 'glo', '[from] ability: ' + sourceEffect.name, '[of] ' + source);
+			} else {
+				this.add('-status', target, 'glo');
+			}
+		},
+		onResidualOrder: 9,
+		onResidual(pokemon) {
+			if (this.randomChance(5,10)){
+			this.damage(pokemon.baseMaxhp / 8);}
+			else if (this.randomChance(5,10)){
+				this.damage(pokemon.baseMaxhp / 16);}
+				else {
+					this.damage(pokemon.baseMaxhp / 4);}
+		},
+	},
+	frostbite: {
+		name: 'frostbite',
+		// this is a volatile status
+		onStart(target, source, sourceEffect) {
+			if (target.hasType ('Ice')) return;
+		
+				this.add('-start', target, 'frostbite');
+
+		},
+		onEnd(target) {
+			this.add('-end', target, 'frostbite');
+		},
+		onResidualOrder: 28,
+		onResidualSubOrder: 2,
+		onResidual(pokemon) {
+			if (pokemon.hasType ('Ice')) return;
+			this.add('-activate', pokemon, 'frostbite');
+			if (pokemon.activeTurns) {
+				this.boost({spe: -1});
+			}
+		},
+	},
+	magicgems:{
+		name: 'magicgems',
+		duration: 6,
+		durationCallback(target, source, effect) {
+			if (source?.hasAbility('persistent')) {
+				this.add('-activate', source, 'ability: Persistent', '[move] Pollute');
+				return 7;
+			}
+			return 5;
+		},
+		onSideStart(side, source) {
+			if (source?.hasAbility('persistent')) {
+				this.add('-sidestart', side, 'Magic Gems', '[persistent]');
+			} else {
+				this.add('-sidestart', side, 'Magic Gems');
+			}
+		},
+		onResidualOrder: 28,
+	onResidualSubOrder: 2,
+	onResidual(pokemon) {
+		const side = pokemon.isAlly(pokemon) ? pokemon.side.foe : pokemon.side;
+		if (this.randomChance(2,10)){
+			side.addSideCondition('spikes')
+			this.add('-activate', pokemon, 'Magic Gems');
+		}
+		if (this.randomChance(1,10)){
+			side.addSideCondition('stealthrock')
+			this.add('-activate', pokemon, 'Magic Gems');
+		}
+		if (this.randomChance(1,10)){
+			side.addSideCondition('toxicspikes')
+			this.add('-activate', pokemon, 'Magic Gems');
+		}
+		if (this.randomChance(1,10)){
+			side.addSideCondition('gmaxsteelsurge')
+			this.add('-activate', pokemon, 'Magic Gems');
+		}
+	},
+		onSideResidualOrder: 26,
+		onSideResidualSubOrder: 5,
+		onSideEnd(side) {
+			this.add('-sideend', side, 'Magic Gems');
+		},
+	},
+	pollutedair:{
+		name: 'pollutedair',
+		duration: 4,
+		durationCallback(target, source, effect) {
+			if (source?.hasAbility('persistent')) {
+				this.add('-activate', source, 'ability: Persistent', '[move] Pollute');
+				return 6;
+			}
+			return 4;
+		},
+		onSideStart(side, source) {
+			if (source?.hasAbility('persistent')) {
+				this.add('-sidestart', side, 'move: Pollute', '[persistent]');
+			} else {
+				this.add('-sidestart', side, 'Polluted Air');
+			}
+		},
+		onResidualOrder: 28,
+	onResidualSubOrder: 2,
+	onResidual(pokemon) {
+		if (pokemon.hasType ('Poison')) return;
+		if (pokemon.hasType ('Steel')) return;
+		
+		if (this.randomChance(2,10)){
+			pokemon.trySetStatus ('psn')
+			this.add('-activate', pokemon, 'pollutedair');
+		}
+		if (this.randomChance(2,10)){
+			pokemon.trySetStatus ('tox')
+			this.add('-activate', pokemon, 'pollutedair');
+		}
+	},
+		onSideResidualOrder: 26,
+		onSideResidualSubOrder: 5,
+		onSideEnd(side) {
+			this.add('-sideend', side, 'move: Pollute');
+		},
+	},
+	oceanicveil:{
+		name: 'oceanicveil',
+		duration: 4,
+		durationCallback(target, source, effect) {
+			if (source?.hasAbility('persistent')) {
+				this.add('-activate', source, 'ability: Persistent', '[move] Pollute');
+				return 10;
+			}
+			return 7;
+		},
+		onSideStart(side, source) {
+			if (source?.hasAbility('persistent')) {
+				this.add('-sidestart', side, 'Oceanic Veil', '[persistent]');
+			} else {
+				this.add('-sidestart', side, 'Oceanic Veil');
+			}
+		},
+		onResidualOrder: 28,
+	onResidualSubOrder: 2,
+	onResidual(pokemon) {
+		if (pokemon.hasType ('Rock')) return;
+		if (pokemon.hasType ('Fire')) return;
+		if (pokemon.hasType ('Ground')) return;
+		
+		if (this.randomChance(4,10)){
+			this.heal(pokemon.baseMaxhp / 8);
+			this.add('-activate', pokemon, 'Oceanic Veil');
+		}
+		else if (this.randomChance(3,10)){
+			this.heal(pokemon.baseMaxhp / 6);
+			this.add('-activate', pokemon, 'Oceanic Veil');
+		}
+		else if (this.randomChance(2,10)){
+			this.heal(pokemon.baseMaxhp / 4);
+			this.add('-activate', pokemon, 'Oceanic Veil');
+		}
+	},
+		onSideResidualOrder: 26,
+		onSideResidualSubOrder: 5,
+		onSideEnd(side) {
+			this.add('-sideend', side, 'Oceanic Veil');
+		},
+	},
+	glowingspores:{
+		name: 'glowingspores',
+		onSideStart(side) {
+				this.add('-sidestart', side, 'Glowing Spores');
+			},
+			onEntryHazard(pokemon) {
+				if (pokemon.hasItem('heavydutyboots') || pokemon.hasAbility('flutteringbug')) return;
+				let stats: BoostID[] = [];
+			const boost: SparseBoostsTable = {};
+			let statPlus: BoostID;
+			for (statPlus in pokemon.boosts) {
+				if (statPlus === 'accuracy' || statPlus === 'evasion') continue;
+				if (pokemon.boosts[statPlus] < 6) {
+					stats.push(statPlus);
+				}
+			}
+			let randomStat: BoostID | undefined = stats.length ? this.sample(stats) : undefined;
+			if (randomStat) boost[randomStat] = -1;
+
+			this.boost(boost, pokemon, pokemon);
+			}
+		},
+
+    elementroom: {
+		name: 'elementroom',
+		duration: 5,
+			durationCallback(source, effect) {
+				if (source?.hasAbility('persistent')) {
+					this.add('-activate', source, 'ability: Persistent', '[move] Magic Room');
+					return 7;
+				}
+				return 5;
+			},
+			onFieldStart(target, source) {
+				if (source?.hasAbility('persistent')) {
+					this.add('-fieldstart', 'move: Element Room', '[of] ' + source, '[persistent]');
+				} else {
+					this.add('-fieldstart', 'move: Element Room', '[of] ' + source);
+				}
+			},
+			onFieldRestart(target, source) {
+				this.field.removePseudoWeather('elementroom');
+			},
+			// Item suppression implemented in Pokemon.ignoringItem() within sim/pokemon.js
+			onFieldResidualOrder: 27,
+			onFieldResidualSubOrder: 6,
+			onFieldEnd() {
+				this.add('-fieldend', 'move: Element Room', '[of] ' + this.effectState.source);
+			},
+			onResidualSubOrder: 2,
+	onResidual(pokemon) {
+		const types = this.dex.types.all();
+			let randomType = '';
+			if (types.length) {
+				randomType = this.sample(types).id;
+			}
+			const oldType = pokemon.setType(randomType);
+			if (oldType) {
+				this.add('-start', pokemon,'typechange', randomType, '[from] Element Room');
+				return;
+			}
+			return oldType as false | null;
+	},
+	},
+	bamboozle: {
+		name: 'bamboozle',
+		// this is a volatile status
+		onStart(target, source, sourceEffect) {
+				this.add('-start', target, 'bamboozle');
+				const min = sourceEffect?.id === 'axekick' ? 1 : 2;;
+				this.effectState.time = this.random(min, 2);
+		},
+		onEnd(target) {
+			this.add('-end', target, 'bamboozle');
+		},
+		onTryMove(pokemon) {
+			pokemon.volatiles['bamboozle'].time--;
+			if (!pokemon.volatiles['bamboozle'].time) {
+				pokemon.removeVolatile('bamboozle');
+				return;
+			}
+			this.add('-activate', pokemon, 'bamboozle');
+			this.activeTarget = pokemon;
+				const moves = [];
+				for (const moveSlot of pokemon.moveSlots) {
+					const moveid = moveSlot.id;
+					if (!moveid) continue;
+					const move = this.dex.moves.get(moveid);
+					if (move.flags['nosleeptalk'] || move.flags['charge'] || (move.isZ && move.basePower !== 1) || move.isMax) {
+						continue;
+					}
+					moves.push(moveid);
+				}
+				let randomMove = '';
+				if (moves.length) randomMove = this.sample(moves);
+				if (!randomMove) {
+					return false;
+				}
+				this.actions.useMove(randomMove, pokemon);
+				return false;
+		},
+	},
+    starryshield: {
+		duration: 1,
+		  onStart(pokemon) {
+			this.add('-singleturn', pokemon, 'Starry Shield');
+		  },
+		  onTryHit(target, source, move) {
+			if (target !== source && move.category !== 'Status') {
+			  this.add('-immune', target, '[from] move: Starlight Veil');
+			  return null;
+			}
+		  },
+		  onEnd(pokemon) {
+			this.add('-end', pokemon, 'Starry Shield');
+		  },
+		},
+	prismaticterrain: {
+		
+		duration: 5,
+		durationCallback(source, effect) {
+		  if (source?.hasItem('terrainextender')) {
+			return 8;
+		  }
+		  return 5;
+		},
+		onFieldStart(battle, source, effect) {
+			  this.add('-fieldstart', 'move: Prismatic Terrain', '[from] move: Prismatic Surge');
+			  this.add('-message', 'The battlefield is shining with prismatic energy!');
+			},
+		onBasePower(basePower, attacker, defender, move) {
+		  if (move.type === 'Steel') {
+			this.debug('prismatic terrain boost');
+			return this.chainModify(1.3);
+		  }
+		  if (move.type === 'Fire') {
+			this.debug('prismatic terrain fire weaken');
+			return this.chainModify(0.75);
+			 }
+		},
+		onFieldResidualOrder: 27,
+			onFieldResidualSubOrder: 7,
+		onFieldEnd() {
+		  this.add('-fieldend', 'move: Prismatic Terrain');
+		  this.add('-message', 'The prismatic energy fades from the battlefield.');
+		},
+	  },
+	riftrupture: {
+		duration: 5,
+		onFieldStart(target, source) {
+		  this.add('-fieldstart', 'move: Rift Rupture', '[from] ' + source);
+		  this.add('-message', 'A dimensional rift distorts the battlefield!');
+		  this.effectState.damage = 0;
+		},
+		onTryMove(target, source, move) {
+			// Ensure the move isn't Rift Rupture itself and has a chance to be absorbed
+			if (move.id !== 'riftrupture' && this.randomChance(1, 2)) {
+				this.add('-message', `${source.name}'s ${move.name} was absorbed by the rift!`);
+				// Increment the counter for each absorbed move
+				this.effectState.damage++;
+				// Prevent the move from executing
+				return false;
+			}
+		},
+		onResidualOrder: 5,
+			onResidualSubOrder: 2,
+			onResidual(pokemon) {
+				if (pokemon.isGrounded() && !pokemon.isSemiInvulnerable() && !pokemon.hasType('Ghost')) {
+					this.add('-message', `${pokemon.name} was damaged by the rift!`);
+					let damage = this.clampIntRange(40 + (20 * (this.effectState.damage)), 20, 500);
+					this.damage(damage, pokemon);
+				}
+			},
+		onFieldResidualOrder: 27,
+		onFieldResidualSubOrder: 7,
+		onFieldEnd(pokemon) {
+		  this.add('-fieldend', 'move: Rift Rupture');
+		  this.add('-message', 'The dimensional rift collapses!');
+		  
+		},
+	},
 	confusion: {
 		name: 'confusion',
 		// this is a volatile status
 		onStart(target, source, sourceEffect) {
 			if (sourceEffect?.id === 'lockedmove') {
 				this.add('-start', target, 'confusion', '[fatigue]');
-			} else if (sourceEffect?.effectType === 'Ability') {
-				this.add('-start', target, 'confusion', '[from] ability: ' + sourceEffect.name, '[of] ' + source);
 			} else {
 				this.add('-start', target, 'confusion');
 			}
@@ -393,6 +739,9 @@ export const Conditions: {[k: string]: ConditionData} = {
 			}
 			if (data.source.hasAbility('normalize') && this.gen >= 6) {
 				data.moveData.type = 'Normal';
+			}
+			if (data.source.hasAbility('adaptability') && this.gen >= 6) {
+				data.moveData.stab = 2;
 			}
 			const hitMove = new this.dex.Move(data.moveData) as ActiveMove;
 
@@ -820,9 +1169,11 @@ export const Conditions: {[k: string]: ConditionData} = {
 		onTrapPokemon(pokemon) {
 			pokemon.trapped = true;
 		},
-		// Dodging moves is handled in BattleActions#hitStepInvulnerabilityEvent
-		// This is here for moves that manually call this event like Perish Song
-		onInvulnerability: false,
+		// Override No Guard
+		onInvulnerabilityPriority: 2,
+		onInvulnerability(target, source, move) {
+			return false;
+		},
 		onBeforeTurn(pokemon) {
 			this.queue.cancelAction(pokemon);
 		},
@@ -878,3 +1229,6 @@ export const Conditions: {[k: string]: ConditionData} = {
 		},
 	},
 };
+
+
+
